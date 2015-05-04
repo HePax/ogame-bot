@@ -50,5 +50,13 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+
 # PyBuilder
 target/
+
+# Rope Vim plugin
+.ropeproject
+
+
+config.ini
+bot.pid
