@@ -1,0 +1,446 @@
+<html>
+<head>
+<title>ogame-lcc</title>
+<link rel="shortcut icon" href="./favicon.ico" />
+<link rel="stylesheet" type="text/css" href="styles/css/default.css" />
+<link rel="stylesheet" type="text/css" href="styles/css/formate.css" />
+<link rel="stylesheet" type="text/css" href="styles/skins/xgproject/formate.css" />
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="generator" content="XG Project v2.10.10" />
+<meta charset="UTF-8" /><script type="text/javascript" src="js/overlib-min.js"></script>
+</head>
+<body style="overflow: hidden;" onload="" onunload=""><div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000;"></div>
+<div id="header_top"><center>
+<table class="header">
+<tr class="header">
+<td class="header" style="width:5;">
+<table class="header">
+<tr class="header">
+<td class="header"><img src="styles/skins/xgproject/planeten/small/s_normaltempplanet03.jpg" height="50" width="50" /></td>
+<td class="header">
+<table class="header">
+<select size="1" onchange="eval('location=\''+this.options[this.selectedIndex].value+'\'');">
+<option selected="selected" value="game.php?page=buildings&amp;gid=&amp;cp=24&amp;mode=&amp;re=0">Planeta Principal&nbsp;[1:12:8]&nbsp;&nbsp;</option>
+</select>
+</table>
+</td>
+</tr>
+</table></td>
+<td class="header"> <table class="header" id="resources" border="0" cellspacing="0" cellpadding="0" padding-right="30">
+<tr class="header">
+<td align="center" width="85" class="header">
+<img border="0" src="styles/skins/xgproject/images/metall.gif" width="42" height="22" />
+</td>
+<td align="center" width="85" class="header">
+<img border="0" src="styles/skins/xgproject/images/kristall.gif" width="42" height="22" />
+</td>
+<td align="center" width="85" class="header">
+<img border="0" src="styles/skins/xgproject/images/deuterium.gif" width="42" height="22" />
+</td>
+<td align="center" width="85" class="header">
+<img border="0" src="styles/skins/xgproject/images/energie.gif" width="42" height="22" />
+</td>
+</tr>
+<tr class="header">
+<td align="center" class="header" width="85"><i><b><font color="#ffffff">Metal</font></b></i></td>
+<td align="center" class="header" width="85"><i><b><font color="#ffffff">Crystal</font></b></i></td>
+<td align="center" class="header" width="85"><i><b><font color="#ffffff">Deuterium</font></b></i></td>
+<td align="center" class="header" width="85"><i><b><font color="#ffffff">Energy</font></b></i></td>
+</tr>
+<tr class="header">
+<td align="center" class="header" width="90"><font>3.744</font></td>
+<td align="center" class="header" width="90"><font>1.007</font></td>
+<td align="center" class="header" width="90"><font>307</font></td>
+<td align="center" class="header" width="90">5/272</td>
+</tr>
+</table></td>
+</tr>
+</table>
+</center></div>
+<div id="leftmenu">
+<script language="JavaScript">
+function f(target_url,win_name) {
+  var new_win = window.open(target_url,win_name,'resizable=yes,scrollbars=yes,menubar=no,toolbar=no,width=550,height=280,top=0,left=0');
+  new_win.focus();
+}
+</script>
+<center>
+<div id="menu">
+<p style="width:110px;"><nobr>ogame-lcc (<a href="game.php?page=changelog">v2.10.10</a>)</nobr></p>
+<table width="110" cellspacing="0" cellpadding="0">
+<tr>
+<td><img src="styles/skins/xgproject/gfx/ogame-produktion.jpg" width="110" height="40" /></td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=overview">Overview</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=imperium">Empire</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=buildings">Buildings</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=resources">Resources</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=buildings&amp;mode=research">Research</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=buildings&amp;mode=fleet">Shipyard</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=fleet">Fleet</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=techtree">Technology</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=galaxy&amp;mode=0">Galaxy</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=buildings&amp;mode=defense" accesskey="d">Defense</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><img src="styles/skins/xgproject/gfx/info-help.jpg" width="110" height="19" /></td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=alliance">Alliance</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=statistics&amp;range=12">Statistics</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=search">Search</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td><img src="styles/skins/xgproject//gfx/user-menu.jpg" width="110" height="35" /></td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=messages">Messages</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="#" onclick="f('game.php?page=notes', 'Notes')">Notes</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=buddy">Buddylist</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=options">Options</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="game.php?page=logout">Logout</a>
+</font></div>
+</td>
+</tr>
+<tr>
+<td>
+<div align="center"><font color="#FFFFFF">
+<a href="#" title="Powered by XG Project © 2008 - 2014 GNU General Public License">© 2008 - 2014</a>
+</font></div>
+</td>
+</tr>
+</table>
+</div></center>
+</div>
+<!-- END LEFTMENU -->
+<center>
+<br />
+<div id="content">
+<script type="text/javascript">
+&lt;!--
+function t() {
+	v           = new Date();
+	var blc     = document.getElementById('blc');
+	var timeout = 1;
+	n           = new Date();
+	ss          = pp;
+	aa          = Math.round( (n.getTime() - v.getTime() ) / 1000. );
+	s           = ss - aa;
+	m           = 0;
+	h           = 0;
+
+	if ( (ss + 3) &lt; aa ) {
+		blc.innerHTML = "finished&lt;br&gt;" + "&lt;a href=game.php?page=buildings&amp;planet=" + pl + "&gt;continue&lt;/a&gt;";
+		if ((ss + 6) &gt;= aa) {
+			window.setTimeout('document.location.href="game.php?page=buildings&planet;=' + pl + '";', 3500);
+		}
+	} else {
+		if ( s &lt; 0 ) {
+			if (1) {
+				blc.innerHTML = "finished&lt;br&gt;" + "&lt;a href="game.php?page=buildings&amp;planet=""&gt;continue&lt;/a&gt;";
+				window.setTimeout('document.location.href="game.php?page=buildings&planet;=' + pl + '";', 2000);
+			} else {
+				timeout = 0;
+				blc.innerHTML = "finished&lt;br&gt;" + "&lt;a href="game.php?page=buildings&amp;planet=""&gt;continue&lt;/a&gt;";
+			}
+		} else {
+			if ( s &gt; 59) {
+				m = Math.floor( s / 60);
+				s = s - m * 60;
+			}
+			if ( m &gt; 59) {
+				h = Math.floor( m / 60);
+				m = m - h * 60;
+			}
+			if ( s &lt; 10 ) {
+				s = "0" + s;
+			}
+			if ( m &lt; 10 ) {
+				m = "0" + m;
+			}
+			if (1) {
+				blc.innerHTML = h + ":" + m + ":" + s + "&lt;br&gt;&lt;a href="game.php?page=buildings&amp;r=buildings&amp;listid=""&gt;cancel&lt;/a&gt;";
+			} else {
+				blc.innerHTML = h + ":" + m + ":" + s + "&lt;br&gt;&lt;a href="game.php?page=buildings&amp;r=buildings&amp;listid=""&gt;cancel&lt;/a&gt;";
+			}
+		}
+		pp = pp - 1;
+		if (timeout == 1) {
+			window.setTimeout("t();", 999);
+		}
+	}
+}
+//--&gt;
+</script>
+<table width="530">
+<tr> <td class="l" colspan="2">1.: Solar Plant 8</td> <td class="k"> <div id="blc" class="z">1044<br /> <a href="game.php?page=buildings&amp;listid=1&amp;cmd=cancel&amp;planet=24">Interrupt</a></div> <script language="JavaScript">			pp = "1044";
+			pk = "1";
+			pm = "cancel";
+			pl = "24";
+			t();
+		</script> <strong color="lime"><br /><font color="lime">3/05 12:09:49</font></strong> </td></tr><tr> <td class="l" colspan="2">2.: Deuterium Synthesizer 3</td> <td class="k"> <font color="red"> <a href="game.php?page=buildings&amp;listid=2&amp;cmd=remove&amp;planet=24">cancel</a></font> </td></tr><tr> <td class="l" colspan="2">3.: Deuterium Synthesizer 4</td> <td class="k"> <font color="red"> <a href="game.php?page=buildings&amp;listid=3&amp;cmd=remove&amp;planet=24">cancel</a></font> </td></tr><tr> <td class="l" colspan="2">4.: Solar Plant 9</td> <td class="k"> <font color="red"> <a href="game.php?page=buildings&amp;listid=4&amp;cmd=remove&amp;planet=24">cancel</a></font> </td></tr><tr> <td class="l" colspan="2">5.: Deuterium Synthesizer 5</td> <td class="k"> <font color="red"> <a href="game.php?page=buildings&amp;listid=5&amp;cmd=remove&amp;planet=24">cancel</a></font> </td></tr>
+<tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=1">
+<img border="0" src="styles/skins/xgproject/gebaeude/1.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=1">Metal Mine</a> (level 7)<br />
+		Used in the extraction of metal ore, metal mines are of primary importance to all emerging and established empires.<br />
+		Requires: Metal: <b style="color:lime;">1.025</b> Crystal: <b style="color:lime;">256</b>
+<br />Construction Time: 00h 30m 44s
+	</td>
+<td class="k"><font color="#FF0000">upgrade level 8</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=2">
+<img border="0" src="styles/skins/xgproject/gebaeude/2.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=2">Crystal Mine</a> (level 5)<br />
+		Crystals are the main resource used to build electronic circuits and form certain alloy compounds.<br />
+		Requires: Metal: <b style="color:lime;">503</b> Crystal: <b style="color:lime;">251</b>
+<br />Construction Time: 00h 18m 05s
+	</td>
+<td class="k"><font color="#FF0000">upgrade level 6</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=3">
+<img border="0" src="styles/skins/xgproject/gebaeude/3.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=3">Deuterium Synthesizer</a> (level 2)<br />
+		Deuterium is used as fuel for spaceships and is harvested in the deep sea. Deuterium is a rare substance and is thus relatively expensive.<br />
+		Requires: Metal: <b style="color:lime;">506</b> Crystal: <b style="color:lime;">168</b>
+<br />Construction Time: 00h 16m 10s
+	</td>
+<td class="k"><font color="#FF0000">upgrade level 3</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=4">
+<img border="0" src="styles/skins/xgproject/gebaeude/4.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=4">Solar Plant</a> (level 7)<br />
+		Solar power plants absorb energy from solar radiation. All mines need energy to operate.<br />
+		Requires: Metal: <b style="color:lime;">1.281</b> Crystal: <b style="color:lime;">512</b>
+<br />Construction Time: 00h 43m 01s
+	</td>
+<td class="k"><font color="#FF0000">upgrade level 8</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=14">
+<img border="0" src="styles/skins/xgproject/gebaeude/14.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=14">Robotics Factory</a><br />
+		Robotic factories provide construction robots to aid in the construction of buildings. Each level increases the speed of the upgrade of buildings.<br />
+		Requires: Metal: <b style="color:lime;">400</b> Crystal: <b style="color:lime;">120</b> Deuterium: <b style="color:lime;">200</b>
+<br />Construction Time: 00h 12m 28s
+	</td>
+<td class="k"><font color="#FF0000">build</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=22">
+<img border="0" src="styles/skins/xgproject/gebaeude/22.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=22">Metal Storage</a><br />
+		Provides storage for excess metal.<br />
+		Requires: Metal: <b style="color:lime;">2.000</b>
+<br />Construction Time: 00h 48m 00s
+	</td>
+<td class="k"><font color="#FF0000">build</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=23">
+<img border="0" src="styles/skins/xgproject/gebaeude/23.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=23">Crystal Storage</a><br />
+		Provides storage for excess crystal.<br />
+		Requires: Metal: <b style="color:lime;">2.000</b> Crystal: <b style="color:lime;">1.000</b>
+<br />Construction Time: 01h 12m 00s
+	</td>
+<td class="k"><font color="#FF0000">build</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=24">
+<img border="0" src="styles/skins/xgproject/gebaeude/24.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=24">Deuterium Tank</a><br />
+		Giant tanks for storing newly-extracted deuterium.<br />
+		Requires: Metal: <b style="color:lime;">2.000</b> Crystal: <b style="color:red;"> <t title="-993"><span class="noresources">2.000</span></t></b>
+<br />Construction Time: 01h 36m 00s
+	</td>
+<td class="k"><font color="#FF0000">build</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=31">
+<img border="0" src="styles/skins/xgproject/gebaeude/31.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=31">Research Lab</a><br />
+		A research lab is required in order to conduct research into new technologies.<br />
+		Requires: Metal: <b style="color:lime;">200</b> Crystal: <b style="color:lime;">400</b> Deuterium: <b style="color:lime;">200</b>
+<br />Construction Time: 00h 14m 23s
+	</td>
+<td class="k"><font color="#FF0000">build</font></td>
+</tr><tr>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=34">
+<img border="0" src="styles/skins/xgproject/gebaeude/34.gif" align="top" width="120" height="120" />
+</a>
+</td>
+<td class="l">
+<a href="game.php?page=infos&amp;gid=34">Alliance Depot</a><br />
+		The alliance depot supplies fuel to friendly Fleets in orbit helping with defense.<br />
+		Requires: Metal: <b style="color:red;"> <t title="-16.256"><span class="noresources">20.000</span></t></b> Crystal: <b style="color:red;"> <t title="-38.993"><span class="noresources">40.000</span></t></b>
+<br />Construction Time: 1d 00h 00m 00s
+	</td>
+<td class="k"><font color="#FF0000">build</font></td>
+</tr>
+</table>
+</div>
+</center>
+<script>
+messageboxHeight=0;
+errorboxHeight=0;
+contentbox = document.getElementById('content');
+</script>
+<div id="messagebox">
+<center>
+</center>
+</div>
+<div id="errorbox">
+<center>
+</center>
+</div>
+<script>
+headerHeight = 81;
+errorbox.style.top=parseInt(headerHeight+messagebox.offsetHeight+5)+'px';
+contentbox.style.top=parseInt(headerHeight+errorbox.offsetHeight+messagebox.offsetHeight+10)+'px';
+if (navigator.appName=='Netscape'){if (window.innerWidth&lt;1020){document.body.scroll='no';}   contentbox.style.height=parseInt(window.innerHeight)-messagebox.offsetHeight-errorbox.offsetHeight-headerHeight-20;
+if(document.getElementById('resources')) {   document.getElementById('resources').style.width=(window.innerWidth*0.4);}}
+ else {
+if (document.body.offsetWidth&lt;1020){document.body.scroll='no';}   contentbox.style.height=parseInt(document.body.offsetHeight)-messagebox.offsetHeight-headerHeight-errorbox.offsetHeight-20;document.getElementById('resources').style.width=(document.body.offsetWidth*0.4);
+}for (var i = 0; i &lt; document.links.length; ++i) {
+  if (document.links[i].href.search(/.*redir\.php\?url=.*/) != -1) {
+    document.links[i].target = "_blank";
+  }
+}
+
+</script>
+</body>
+</html><html></html>

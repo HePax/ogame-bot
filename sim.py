@@ -2,48 +2,48 @@ import math
 
 class Sim(object):
 	FIRST_COST = {
-		'metalMine': {
+		'Metal Mine': {
 			'metal':    60,
 			'crystal':  15,
 			'deuterium': 0,
 		},
-		'crystalMine': {
+		'Crystal Mine': {
 			'metal':   48,
 			'crystal': 24,
 			'deuterium': 0
 		},
-		'deuteriumMine':{
+		'Deuterium Mine':{
 			'metal':   225,
 			'crystal':  75,
 			'deuterium': 0
 		},
-		'solarPlant': {
+		'Solar Plant': {
 			'metal':   75,
 			'crystal': 30,
 			'deuterium': 0
 		},
-		'fusionPlant': {
+		'Fusion Plant': {
 			'metal': 900,
 			'crystal': 360,
 			'deuterium': 180
 		}
 	}
 	FACTORS = {
-		'metalMine': 1.5,
-		'crystalMine': 1.6,
-		'deuteriumMine': 1.5,
-		'solarPlant': 1.5,
-		'fusionPlant': 1.8
+		'Metal Mine': 1.5,
+		'Crystal Mine': 1.6,
+		'Deuterium Mine': 1.5,
+		'Solar Plant': 1.5,
+		'Fusion Plant': 1.8
 	}
 
 	ENERGY_COST_FACTORS = {
-		'metalMine': 10,
-		'crystalMine': 10,
-		'deuteriumMine': 20
+		'Metal Mine': 10,
+		'Crystal Mine': 10,
+		'Deuterium Mine': 20
 	}
 
 	def _calc_building_cost(self, what, level):
-		assert what in ('metalMine', 'crystalMine', 'deuteriumMine', 'solarPlant', 'fusionPlant')
+		assert what in ('Metal Mine', 'Crystal Mine', 'Deuterium Mine', 'Solar Plant', 'Fusion Plant')
 		return {
 			'metal': int(self.FIRST_COST[what]['metal'] * (self.FACTORS[what] ** (level - 1))),
 			'crystal': int(self.FIRST_COST[what]['crystal'] * (self.FACTORS[what] ** (level - 1))),
@@ -60,16 +60,16 @@ class Sim(object):
 			return -10000000
 
 	def cost_solar_plant(self, level):
-		return self._calc_building_cost('solarPlant', level)
+		return self._calc_building_cost('Solar Plant', level)
 
 	def cost_metal_mine(self, level):
-		return self._calc_building_cost('metalMine', level)
+		return self._calc_building_cost('Metal Mine', level)
 
 	def cost_crystal_mine(self, level):
-		return self._calc_building_cost('crystalMine', level)
+		return self._calc_building_cost('Crystal Mine', level)
 
 	def cost_deuterium_mine(self, level):
-		return self._calc_building_cost('deuteriumMine', level)
+		return self._calc_building_cost('Deuterium Mine', level)
 
 	def get_cost(self, what, level):
 		return self._calc_building_cost(what, level)

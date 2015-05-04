@@ -12,9 +12,9 @@ class Planet(object):
         self.galaxy, self.system, self.position = map(int, self.coords.split(":"))
         self.in_construction_mode = in_construction_mode
         self.mines = (
-            'metalMine',
-            'crystalMine',
-            'deuteriumMine'
+            'Metal Mine',
+            'Crystal Mine',
+            'Deuterium Mine'
         )
         self.resources = {
             'metal': 0,
@@ -83,10 +83,21 @@ class Planet(object):
 
     def __eq__(self, other):
         return self.id == other.id
-    
-    def get_mine_to_upgrade(self):
+        
+    def get_mine_to_upgrade_list(self):
         build_options = options['building']
-        min_energy_level = int(build_options['min_energy_level'])
+        for s in build_options['list'].split(','):
+            name,lvl=[x.strip() for x in s.split(':')]
+            if name in self.buildings:
+                if int(lvl)>self.buildings[name]['level']:
+                    if self.buildings[name].has_key('link'):
+                        return name, self.buildings[name]['link']
+                    else:
+                        return None
+        return get_mine_to_upgrade_classic(self)
+    
+    def get_mine_to_upgrade_classic(self):
+        build_options = options['building']
         levels_diff = map(int, build_options['levels_diff'].split(','))
         max_fusion_lvl = int(build_options['max_fusion_plant_level'])
 
@@ -99,9 +110,9 @@ class Planet(object):
             mine_levels[i] = b[mine]['level']
 
         proposed_levels = [
-            b['metalMine']['level'],
-            b['metalMine']['level'] - levels_diff[0],
-            b['metalMine']['level'] - levels_diff[0] - levels_diff[1]
+            b['Metal Mine']['level'],
+            b['Metal Mine']['level'] - levels_diff[0],
+            b['Metal Mine']['level'] - levels_diff[0] - levels_diff[1]
         ]
         proposed_levels = [0 if l < 0 else l for l in proposed_levels]
         if proposed_levels == mine_levels or (mine_levels[1] >= proposed_levels[1] and mine_levels[2] >= proposed_levels[2]):
@@ -112,22 +123,22 @@ class Planet(object):
             building = self.mines[i]
             if b[building]['sufficient_energy']:
                 num_suff_energy += 1
-            if b[building]['can_build'] and proposed_levels[i] > b[building]['level']:
+            if b[building].has_key('link') and proposed_levels[i] > b[building]['level']:
                 if b[building]['sufficient_energy']:
-                    return building, b[building]['build_url']
+                    return building
                 else:
                     build_power_plant = True
 
         if build_power_plant or num_suff_energy == 0:
-            if b['solarPlant']['can_build']:
-                return u'Solar plant', b['solarPlant']['build_url']
-            elif b['fusionPlant']['can_build'] and \
-                    b['fusionPlant']['level'] < max_fusion_lvl:
-                return u'Fusion plant', b['fusionPlant']['build_url']
+            if b['Solar Plant'].has_key('link'):
+                return u'Solar plant'
+            elif b.has_key('Fusion Plant') and b['Fusion Plant'].has_key('link') and \
+                    b['Fusion Plant']['level'] < max_fusion_lvl:
+                return u'Fusion Plant'
             else:
-                return None, None
+                return None
         else:
-            return None, None
+            return None
 
     def is_moon(self):
         return False
