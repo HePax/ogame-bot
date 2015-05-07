@@ -410,7 +410,7 @@ class Bot(object):
         try:
             planet.researches = {}
             tabla=soup.find('table', {'width': '530'})
-            if table is None:
+            if tabla is None:
                 return True
             for c in tabla.findAll('td', {'class': 'l'}):
                 if len(c.attrs) == 1:
