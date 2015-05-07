@@ -409,7 +409,10 @@ class Bot(object):
             return
         try:
             planet.researches = {}
-            for c in soup.find('table', {'width': '530'}).findAll('td', {'class': 'l'}):
+            tabla=soup.find('table', {'width': '530'})
+            if table is None:
+                return True
+            for c in tabla.findAll('td', {'class': 'l'}):
                 if len(c.attrs) == 1:
                     childs = c.findChildren()
                     if len(childs) > 2:
