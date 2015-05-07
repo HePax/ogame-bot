@@ -16,3 +16,7 @@ def load_sms_gateway(name):
     for comp in components[1:]:
         mod = getattr(mod, comp)
     return mod
+    
+def strtobool(s):
+    return s.strip().lower() in ['true','yes','si','1','y','s']
+        

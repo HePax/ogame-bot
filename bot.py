@@ -19,6 +19,7 @@ from attack import Attack
 from transport_manager import TransportManager
 from config import options
 from sim import Sim
+from utils import strtobool
 socket.setdefaulttimeout(float(options['general']['timeout']))
 
 
@@ -795,7 +796,7 @@ class Bot(object):
 
     
     def farm(self):
-        if options['farming'].has_key('enabled') and options['farming']['enabled'].strip().lower() not in ['true','yes','si','1','y','s']:
+        if options['farming'].has_key('enabled') and not strtobool(options['farming']['enabled']):
             return
         farms =[s.strip().split(' ')[0] for s in  options['farming']['farms'].split(',')]
         if not farms or not farms[0]:

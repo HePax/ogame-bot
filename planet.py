@@ -154,7 +154,9 @@ class Planet(object):
         finally:
             if updated:
                 options.change_item('building', 'checklist', ', '.join(map(self.checktostr, checklist)))
-        return self.get_mine_to_upgrade_classic()
+        if build_options.has_key('autoresources') and strtobool(options['farming']['autoresources']):
+            return self.get_mine_to_upgrade_classic()
+        return {}
 
     def get_max_possible(self, cost):
         mx=-1
@@ -197,20 +199,17 @@ class Planet(object):
                 num_suff_energy += 1
             if b[building]['link'] and proposed_levels[i] > b[building]['level']:
                 if b[building]['sufficient_energy']:
-                    return building
+                    return {"buildings":[building]}
                 else:
                     build_power_plant = True
 
         if build_power_plant or num_suff_energy == 0:
             if b['Solar Plant']['link']:
-                return u'Solar Plant'
+                return {"buildings":['Solar Plant']}
             elif b.has_key('Fusion Plant') and b['Fusion Plant']['link'] and \
                     b['Fusion Plant']['level'] < max_fusion_lvl:
-                return u'Fusion Plant'
-            else:
-                return None
-        else:
-            return None
+                return {"buildings":['Fusion Plant']}
+        return {}
 
     def is_moon(self):
         return False
