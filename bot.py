@@ -389,7 +389,7 @@ class Bot(object):
                 if len(c.attrs) > 1:
                     name, lvl = self.RE_IN_CONSTRUCTION.findall(
                         str(c.contents[0]))[0]
-                    planet.buildings[name].pop('link', None)
+                    planet.buildings[name]['link']=None
                     planet.buildings[name]['level'] = max(
                         planet.buildings[name]['level'],
                         int(lvl))
