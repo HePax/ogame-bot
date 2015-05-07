@@ -225,7 +225,6 @@ class Bot(object):
     def fetch_planets(self):
         self.logger.info('Fetching planets..')
         resp = self.br.open(self.PAGES['main']).read()
-        open("main.html", "w").write(resp)
         self.calc_time(resp)
         soup = BeautifulSoup(resp)
         self.planets = []

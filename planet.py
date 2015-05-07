@@ -154,8 +154,7 @@ class Planet(object):
         finally:
             if updated:
                 options.change_item('building', 'checklist', ', '.join(map(self.checktostr, checklist)))
-        return {}
-        #return self.get_mine_to_upgrade_classic()
+        return self.get_mine_to_upgrade_classic()
 
     def get_max_possible(self, cost):
         mx=-1
@@ -171,7 +170,7 @@ class Planet(object):
         
     def get_mine_to_upgrade_classic(self):
         build_options = options['building']
-        levels_diff = map(float, build_options['levels_diff'].split(','))
+        levels_diff = map(int, build_options['levels_diff'].split(','))
         max_fusion_lvl = int(build_options['max_fusion_plant_level'])
 
         b = self.buildings
@@ -182,11 +181,11 @@ class Planet(object):
         for i, mine in enumerate(self.mines):
             mine_levels[i] = b[mine]['level']
 
-        proposed_levels =map(math.floor, [
+        proposed_levels =[
             b['Metal Mine']['level'],
             b['Metal Mine']['level'] - levels_diff[0],
-            (b['Metal Mine']['level'] - levels_diff[0]) *levels_diff[1]
-        ])
+            b['Metal Mine']['level'] - levels_diff[0] - levels_diff[1]
+        ]
         proposed_levels = [0 if l < 0 else l for l in proposed_levels]
         if proposed_levels == mine_levels or (mine_levels[1] >= proposed_levels[1] and mine_levels[2] >= proposed_levels[2]):
             proposed_levels[0] += 1
