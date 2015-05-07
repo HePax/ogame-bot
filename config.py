@@ -11,7 +11,6 @@ class Options(watchdog.events.FileSystemEventHandler):
         'general',
         'building',
         'attack',
-        'fleet',
         'sms',
         'farming',
         'expedition'

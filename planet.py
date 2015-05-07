@@ -23,7 +23,7 @@ class Planet(object):
             'deuterium':0,
             'energy':0
         }
-        
+
         self.buildings = {
             'Metal Mine': {
                 'level': 0,
@@ -78,38 +78,88 @@ class Planet(object):
             'rc': 0,
             'ss': 0
         }
-        
+
     def __str__(self):
         return self.name
 
     def __eq__(self, other):
         return self.id == other.id
         
+    def strtocheck(self, s):
+        s=s.strip().lower()
+        if s in ["done","ok","finished","completed","terminado","okay","-1"]:
+            return -1
+        else:
+            try:
+                return int(s)
+            except ValueError:
+                return 0
+        return 0
+    def checktostr(self, v):
+        if v==-1:
+            return 'done'
+        else:
+            return str(v)
+
     def get_upgrades(self):
         build_options = options['building']
-        for s in build_options['list'].split(','):
-            name,lvl=[x.strip() for x in s.split(':')]
-            if name in self.buildings:
-                if int(lvl)>self.buildings[name]['level']:
-                    if self.buildings[name]['link']:
-                        return {'buildings':[name]}
-                    else:
-                        return {}
-            elif name in self.researches:
-                if int(lvl)>self.researches[name]['level']:
-                    if self.researches[name]['link']:
-                        return  {'researches':[name]}
-                    else:
-                        return {}
-        fl=self.get_fleets_to_build()
-        if fl:
-            return {'fleets':fl}
+        buildlist = [s for s in build_options['list'].split(',') if s.strip()]
+        updated=False
+        if build_options.has_key('checklist'):
+            checklist=[self.strtocheck(s) for s in build_options['checklist'].split(',') if s.strip()]
+        else:
+            checklist=[]
+        if len(checklist)>len(buildlist):
+            checklist=[0]*len(buildlist)
+            updated=True
+        elif len(checklist)<len(buildlist):
+            checklist+=[0]*(len(buildlist)-len(checklist))
+            updated=True
+        try:
+            for i,st in enumerate(checklist):
+                if st>=0:
+                    name,lvl=[s.strip() for s in buildlist[i].strip().split(':')]
+                    lvl=int(lvl)
+                    if name in self.buildings:
+                        if lvl>self.buildings[name]['level']:
+                            if self.buildings[name]['link']:
+                                return {'buildings':[name]}
+                            else:
+                                return {}
+                        else:
+                            checklist[i]=-1
+                            updated=True
+                    elif name in self.researches:
+                        if lvl>self.researches[name]['level']:
+                            print self.researches[name]['level']
+                            if self.researches[name]['link']:
+                                return  {'researches':[name]}
+                            else:
+                                return {}
+                        else:
+                            checklist[i]=-1
+                            updated=True
+                    elif name in self.buyable_fleets:
+                        cant=max(0, lvl-st)
+                        if cant==0:
+                            checklist[i] = -1
+                            updated=True
+                        tobuild=min(cant, self.get_max_possible(self.buyable_fleets[name]))
+                        if tobuild>0:
+                            checklist[i]+=tobuild
+                            if checklist[i]==lvl:
+                                checklist[i] = -1
+                            updated=True
+                            return {'fleets' : {name:tobuild}}
+        finally:
+            if updated:
+                options.change_item('building', 'checklist', ', '.join(map(self.checktostr, checklist)))
         return {}
         #return self.get_mine_to_upgrade_classic()
-    
+
     def get_max_possible(self, cost):
         mx=-1
-        for r,a in cost.iteritems(): 
+        for r,a in cost.iteritems():
             if r not in self.resources:
                 return 0
             l=int(math.floor(self.resources[r]/a))
@@ -119,22 +169,6 @@ class Planet(object):
                 mx=min(mx, l)
         return max(mx,0)
         
-    def get_fleets_to_build(self):
-        todo=[s.split(':') for s in options['fleet']['build'].split(',') if s.strip()]
-        todo={name.strip():int(cant.strip()) for name,cant in todo}
-        updated=False
-        res={}
-        for name,cant in todo.iteritems():
-            if name in self.buyable_fleets:
-                tobuild=min(cant, self.get_max_possible(self.buyable_fleets[name]))
-                if tobuild>0:
-                    res[name]=tobuild
-                    todo[name]-=tobuild
-                    updated=True
-        if updated:
-            options.change_item('fleet', 'build', ', '.join(["%s: %d"%(name,cant) for name,cant in todo.iteritems()]))
-        return res
-                
     def get_mine_to_upgrade_classic(self):
         build_options = options['building']
         levels_diff = map(float, build_options['levels_diff'].split(','))
@@ -215,7 +249,7 @@ class Planet(object):
                     if to_send > total:
                         return ships
         return ships
-    
+
     def get_nearby_systems(self, radius):
         g, s, p = map(int, self.coords.split(":"))
         start_system = max(1, s-radius)

@@ -3,7 +3,6 @@ import socket
 import random
 from math import floor
 from BeautifulSoup import BeautifulSoup
-from BeautifulSoup import Tag
 from logging.handlers import RotatingFileHandler
 import time
 from datetime import date
@@ -58,8 +57,7 @@ class Bot(object):
     MISSIONS = {
         'Attack': '1',
         'Transport': '3',
-        'Station': '4',
-        'Hold Position':'5',
+        'Hold Position': '5',
         'Expedition': '15',
         'Collect': '8'
     }
@@ -70,8 +68,7 @@ class Bot(object):
         'Debris': '2'
     }
 
-
-    def __init__(self, username=None, password=None):
+    def __init__(self, username, password, server):
         self.username = username
         self.password = password
         self.logged_in = False
@@ -82,6 +79,10 @@ class Bot(object):
         self.farm_no = randint(0, len(farms)-1) if farms else 0
 
         self.MAIN_URL = 'http://labdcc.fceia.unr.edu.ar/~jgalat/game.php'
+        server=server.replace('http://','')
+        if server[-1]=='/':
+            server=server[:-1]
+        self.MAIN_URL = 'http://'+server+'/game.php'
         self.PAGES = {
             'main':        self.MAIN_URL + '?page=overview',
             'buildings':   self.MAIN_URL + '?page=buildings',
@@ -124,7 +125,7 @@ class Bot(object):
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(fh)
         self.logger.addHandler(sh)
-        self.logger.propagate=False
+        self.logger.propagate = False
 
     def _prepare_browser(self):
         self.br = mechanize.Browser()
@@ -258,14 +259,15 @@ class Bot(object):
     def handle_planets(self):
         for p in iter(self.planets):
             self.upgrade_planet(p)
+        self.farm()
 
     def load_planets(self):
         self.fetch_planets()
         for p in iter(self.planets):
-            self.update_planet_fleet(p)
             self.update_planet_shipyard(p)
             self.update_planet_info(p)
             self.update_planet_research(p)
+            self.update_planet_fleet(p)
         for m in iter(self.moons):
             self.update_planet_info(m)
             self.update_planet_fleet(m)
@@ -313,26 +315,18 @@ class Bot(object):
         return True
 
     def update_planet_fleet(self, planet):
-        resp = self.br.open(self._get_url('fleet', planet))
-        soup = BeautifulSoup(resp)
-        ships = {}
-        for k, v in self.SHIPS.iteritems():
-            available = 0
-            try:
-                s = soup.find(id='button' + v)
-                available = int(
-                    s.find(
-                        'span',
-                        'textlabel').nextSibling.replace(
-                        '.',
-                        ''))
-            except:
-                available = 0
-            ships[k] = available
-
-        #self.logger.info('Updating %s fleet' % planet)
-        #self.logger.info('%s' % fleet)
-        planet.ships = ships
+        planet.ships = {}
+        try:
+            resp = self.br.open(self._get_url('fleet', planet))
+            soup = BeautifulSoup(resp)
+            for c in soup.find('form', {'action': 'game.php?page=fleet1'}).findAll('tr')[2:-2]:
+                name = c.find('a').contents[0].strip()
+                cant = int(c.find('th').findNext('th').contents[0].strip())
+                planet.ships[name] = cant
+        except:
+            self.logger.exception('Exception while updating fleets info')
+        s = ', '.join(["%s: %d" % (n, c) for n, c in planet.ships.iteritems()])
+        self.logger.info('Ships on %s-> %s' % (planet, s))
         return True
 
     def update_planet_shipyard(self, planet):
@@ -361,7 +355,7 @@ class Bot(object):
         except:
             self.logger.exception('Exception while updating resources info')
         else:
-            self.logger.info('Updating resources info for %s:' % planet)
+            self.logger.info('Resources in %s:' % planet)
             s = 'Metal - %(Metal)s, Crystal - %(Crystal)s, Deuterium - %(Deuterium)s'
             self.logger.info(s % planet.resources)
 
@@ -576,37 +570,40 @@ class Bot(object):
         self.logger.info(inactives)
 
     def send_fleet(self, origin_planet, destination, fleet={}, resources={},
-                   mission='Attack', target='Planet', speed=None):
+                   mission='Attack', target='Planet', speed=None, holdingtime=None):
         if origin_planet.coords == destination:
             self.logger.error('Cannot send fleet to the same planet')
             return False
         self.logger.info('Sending fleet from %s to %s (%s)'
                          % (origin_planet, destination, mission))
-        resp = self.br.open(self._get_url('fleet', origin_planet))
         try:
+            resp = self.br.open(self._get_url('fleet', origin_planet))
             try:
-                self.br.select_form(predicate=lambda f: f.attrs.has_key('action') and f.attrs['action']=='game.php?page=fleet1')
+                self.br.select_form(
+                    predicate=lambda f: 'action' in f.attrs and f.attrs
+                    ['action'] == 'game.php?page=fleet1')
             except mechanize.FormNotFoundError:
                 self.logger.info('No available ships on the planet')
                 return False
             #resp=open("samples/fleet.html", "r").read()
             soup = BeautifulSoup(resp)
-            sended= set()
-            for c in  soup.find('form', {'action':'game.php?page=fleet1'}).findAll('tr')[2:-2]:
+            sended = set()
+            for c in soup.find('form', {'action': 'game.php?page=fleet1'}).findAll('tr')[2:-2]:
                 name = c.find('a').contents[0].strip()
                 if name in fleet:
-                    inp= c.find('input')['name'].strip()
+                    inp = c.find('input')['name'].strip()
                     sended.add(name)
-                    self.br.form[inp]=fleet[name]
+                    self.br.form[inp] = str(fleet[name])
 
             for name in fleet.iterkeys():
                 if name not in sended:
                     self.logger.info("Couldn't send all ships to mission")
                     return False
             self.br.submit()
-
             try:
-                self.br.select_form(predicate=lambda f: f.attrs.has_key('action') and f.attrs['action']=='game.php?page=fleet2')
+                self.br.select_form(
+                    predicate=lambda f: 'action' in f.attrs and f.attrs
+                    ['action'] == 'game.php?page=fleet2')
             except mechanize.FormNotFoundError:
                 self.logger.info('Error while sending ships, fleet2')
                 return False
@@ -615,19 +612,21 @@ class Bot(object):
             self.br.form['galaxy'] = galaxy
             self.br.form['system'] = system
             self.br.form['planet'] = position
-            self.br.form['planettype'] = self.TARGETS[target]
+            self.br.form['planettype'] = [self.TARGETS[target]]
             if speed:
-                self.br.form['speed'] =str(floor(int(speed)/10))
+                self.br.form['speed'][0] = str(floor(int(speed)/10))
             self.br.submit()
 
             try:
-                self.br.select_form(predicate=lambda f: f.attrs.has_key('action') and f.attrs['action']=='game.php?page=fleet3')
+                self.br.select_form(
+                    predicate=lambda f: 'action' in f.attrs and f.attrs
+                    ['action'] == 'game.php?page=fleet3')
             except mechanize.FormNotFoundError:
                 self.logger.info('Error while sendind ships, fleet 3')
                 return False
-
-            self.br.form.find_control("mission").readonly = False
-            self.br.form['mission'] = self.MISSIONS[mission]
+            self.br.form['mission'] = [self.MISSIONS[mission]]
+            if holdingtime:
+                self.br.form['holdingtime'] = [str(holdingtime)]
             if 'Metal' in resources:
                 self.br.form['resource1'] = str(resources['Metal'])
             if 'Crystal' in resources:
@@ -635,12 +634,12 @@ class Bot(object):
             if 'Deuterium' in resources:
                 self.br.form['resource3'] = str(resources['Deuterium'])
             self.br.submit()
+            last_response = self.br.response() # This is returned by br.open(...) too
+            print last_response.geturl()
+            print last_response.info()
         except Exception as e:
             self.logger.exception(e)
             return False
-        else:
-            if mission == 'Attack':
-                self.farm_no += 1
         return True
 
     def send_message(self, url, player, subject, message):
@@ -761,7 +760,7 @@ class Bot(object):
         self.send_fleet(p,
                         self.get_safe_planet(p).coords,
                         fleet=fleet,
-                        mission='station',
+                        mission='Hold Position',
                         speed=10,
                         resources={'metal': p.resources['metal']+500,
                                    'crystal': p.resources['crystal']+500,
@@ -795,24 +794,29 @@ class Bot(object):
                         expedition['ships_kind']: expedition['ships_number']},
                     mission='expedition')
 
+    
     def farm(self):
-        farms = options['farming']['farms'].split(' ')
+        if options['farming'].has_key('enabled') and options['farming']['enabled'].strip().lower() not in ['true','yes','si','1','y','s']:
+            return
+        farms =[s.strip().split(' ')[0] for s in  options['farming']['farms'].split(',')]
+        if not farms or not farms[0]:
+            return
         ships_kind = options['farming']['ships_kind']
         ships_number = options['farming']['ships_number']
+        next_farm = int(options['farming']['next_farm'])  % len(farms)
 
-        l = len(farms)
-        if l == 0 or not farms[0]:
-            return
-        farm = farms[self.farm_no % l]
-        if not self.get_player_status(farm)['inactive']:
-            self.farm_no += 1
-            self.logger.error('farm %s seems not to be inactive!', farm)
-            return
-        self.send_fleet(
+        farm = farms[next_farm]
+        #if not self.get_player_status(farm)['inactive']:
+        #    self.logger.error('farm %s seems not to be inactive!', farm)
+        #    return
+        if self.send_fleet(
             self.get_closest_planet(farm),
             farm,
             fleet={ships_kind: ships_number}
-        )
+        ):
+            next_farm = (next_farm+1) % len(farms)
+            options.change_item('farming', 'next_farm', str(next_farm))
+
 
     def sleep(self):
         sleep_options = options['general']
@@ -869,11 +873,11 @@ class Bot(object):
 
 def st():
     credentials = options['credentials']
-    bot = Bot(credentials['username'], credentials['password'])
+    bot = Bot(credentials['username'], credentials['password'], credentials['server'])
     bot.interactive()
     return bot
 
 if __name__ == "__main__":
     credentials = options['credentials']
-    bot = Bot(credentials['username'], credentials['password'])
+    bot = Bot(credentials['username'], credentials['password'], credentials['server'])
     bot.start()
