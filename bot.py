@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import socket
 import random
+from math import floor
 from BeautifulSoup import BeautifulSoup
 from BeautifulSoup import Tag
 from logging.handlers import RotatingFileHandler
@@ -33,7 +34,9 @@ class Bot(object):
     RE_RESOURCE = re.compile(r"(?:<font >)?(\d+)(?:/\d*)?(?:</font>)?")
     RE_BUILD_LVL = re.compile(r"(?: \(level (\d*)\))|<br />")
     RE_IN_CONSTRUCTION = re.compile(r"\d+.: (.*) (\d+)")
-    
+    RE_SHIP_COST = re.compile(
+        r"(\w*): <b style=\"color:\w*;\">(?: <t title=\"-(?:\d|\.)+\"><span class=\"noresources\">)?((?:\d|\.)+)")
+
     # ship -> ship id on the page
     SHIPS = {
         'lm': '204',
@@ -53,31 +56,20 @@ class Bot(object):
 
     # mission ids
     MISSIONS = {
-        'attack': '1',
-        'transport': '3',
-        'station': '4',
-        'expedition': '15',
-        'collect': '8'
+        'Attack': '1',
+        'Transport': '3',
+        'Station': '4',
+        'Hold Position':'5',
+        'Expedition': '15',
+        'Collect': '8'
     }
 
     TARGETS = {
-        'planet': '1',
-        'moon': '3',
-        'debris': '2'
+        'Planet': '1',
+        'Moon': '3',
+        'Debris': '2'
     }
 
-    SPEEDS = {
-        100: '10',
-        90: '9',
-        80: '8',
-        70: '7',
-        60: '6',
-        50: '5',
-        40: '4',
-        30: '3',
-        20: '2',
-        10: '1'
-    }
 
     def __init__(self, username=None, password=None):
         self.username = username
@@ -94,10 +86,10 @@ class Bot(object):
             'main':        self.MAIN_URL + '?page=overview',
             'buildings':   self.MAIN_URL + '?page=buildings',
             'station':     self.MAIN_URL + '?page=station',
-            'research':    self.MAIN_URL + '?page=research',
-            'shipyard':    self.MAIN_URL + '?page=shipyard',
+            'research':    self.MAIN_URL + '?page=buildings&mode=research',
+            'shipyard':    self.MAIN_URL + '?page=buildings&mode=fleet',
             'defense':     self.MAIN_URL + '?page=defense',
-            'fleet':       self.MAIN_URL + '?page=fleet1',
+            'fleet':       self.MAIN_URL + '?page=fleet',
             'galaxy':      self.MAIN_URL + '?page=galaxy',
             'galaxyCnt':   self.MAIN_URL + '?page=galaxyContent',
             'events':      self.MAIN_URL + '?page=eventList',
@@ -132,6 +124,7 @@ class Bot(object):
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(fh)
         self.logger.addHandler(sh)
+        self.logger.propagate=False
 
     def _prepare_browser(self):
         self.br = mechanize.Browser()
@@ -193,10 +186,8 @@ class Bot(object):
         except:
             return False
 
-        alert = soup.find(id='attack_alert')
-
         # no redirect on main page == user logged in
-        if resp.geturl() != self.BASE_URL and alert:
+        if resp.geturl() == self.MAIN_URL:
             self.logged_in = True
             self.logger.info('Logged as: %s' % username)
             return True
@@ -206,7 +197,6 @@ class Bot(object):
         self.br.form['username'] = username
         self.br.form['password'] = password
         self.br.submit()
-        print self.br.geturl()
         if self.br.geturl().startswith(self.MAIN_URL):
             self.logged_in = True
             self.logger.info('Logged as: %s' % username)
@@ -217,6 +207,7 @@ class Bot(object):
             return False
 
     def calc_time(self, resp):
+
         try:
             self.server_time = datetime.strptime(
                 str(date.today().year) + ' ' + self._parse_server_time(resp),
@@ -233,7 +224,7 @@ class Bot(object):
     def fetch_planets(self):
         self.logger.info('Fetching planets..')
         resp = self.br.open(self.PAGES['main']).read()
-
+        open("main.html", "w").write(resp)
         self.calc_time(resp)
         soup = BeautifulSoup(resp)
         self.planets = []
@@ -265,14 +256,61 @@ class Bot(object):
         #    self.check_attacks(soup)
 
     def handle_planets(self):
-        self.fetch_planets()
-
         for p in iter(self.planets):
-            self.update_planet_info(p)
+            self.upgrade_planet(p)
+
+    def load_planets(self):
+        self.fetch_planets()
+        for p in iter(self.planets):
             self.update_planet_fleet(p)
+            self.update_planet_shipyard(p)
+            self.update_planet_info(p)
+            self.update_planet_research(p)
         for m in iter(self.moons):
             self.update_planet_info(m)
             self.update_planet_fleet(m)
+
+    def upgrade_planet(self, planet):
+        upds = planet.get_upgrades()
+        if 'buildings' in upds:
+            for name in upds['buildings']:
+                self.logger.info('Building upgrade on %s: %s' % (planet, name))
+                self.br.open(planet.buildings[name]['link'])
+                # let now transport manager to clear building queue
+                # self.transport_manager.update_building(planet)
+        if 'researches' in upds:
+            for name in upds['researches']:
+                self.logger.info('Building research on %s: %s' % (planet, name))
+                self.br.open(planet.researches[name]['link'])
+
+        if 'fleets' in upds:
+            resp = self.br.open(self._get_url('shipyard', planet))
+            soup = BeautifulSoup(resp)
+            planet.ships = {}
+            formdata = {}
+            for c in soup.findAll('td', {'class': 'l'}):
+                name = c.find('a').contents[0]
+                intxt = c.findNext('th')
+                if not intxt:
+                    continue
+                intxt = intxt.find('input')
+                if not intxt:
+                    continue
+                if name in upds['fleets']:
+                    formdata[intxt['name']] = str(upds['fleets'][name])
+                    self.logger.info(
+                        'Building %d %s on %s' %
+                        (upds['fleets'][name], name, planet))
+                else:
+                    formdata[intxt['name']] = "0"
+            self.br.select_form(nr=0)
+            for name, value in formdata.iteritems():
+                self.br.form[name] = value
+            self.br.submit()
+
+        if not upds:
+            self.logger.info('Nothing to upgrade or build on %s' % planet)
+        return True
 
     def update_planet_fleet(self, planet):
         resp = self.br.open(self._get_url('fleet', planet))
@@ -295,66 +333,113 @@ class Bot(object):
         #self.logger.info('Updating %s fleet' % planet)
         #self.logger.info('%s' % fleet)
         planet.ships = ships
+        return True
+
+    def update_planet_shipyard(self, planet):
+        resp = self.br.open(self._get_url('shipyard', planet))
+        soup = BeautifulSoup(resp)
+        planet.buyable_fleets = {}
+        for c in soup.findAll('td', {'class': 'l'}):
+            name = c.find('a').contents[0]
+            intxt = c.findNext('th')
+            if not intxt:
+                continue
+            res = self.RE_SHIP_COST.findall("".join(map(str, c.contents)))
+            res = {x: int(y.replace('.', '')) for x, y in res}
+            planet.buyable_fleets[name] = res
+        return True
 
     def update_planet_info(self, planet):
-        in_construction_mode = False
         resp = self.br.open(self._get_url('buildings', planet))
         soup = BeautifulSoup(resp)
-        names = ['metal', 'crystal', 'deuterium', 'energy']
+        names = ['Metal', 'Crystal', 'Deuterium', 'Energy']
         try:
-            for i, c in enumerate(soup.find(id='resources').findAll(width='90')):
+            for name, c in zip(names, soup.find(id='resources').findAll(width='90')):
                 matched = self.RE_RESOURCE.findall(
                     str(c.contents[0]).replace('.', ''))[0]
-                planet.resources[names[i]] = int(matched)
+                planet.resources[name] = int(matched)
         except:
             self.logger.exception('Exception while updating resources info')
         else:
             self.logger.info('Updating resources info for %s:' % planet)
-            s = 'metal - %(metal)s, crystal - %(crystal)s, deuterium - %(deuterium)s'
+            s = 'Metal - %(Metal)s, Crystal - %(Crystal)s, Deuterium - %(Deuterium)s'
             self.logger.info(s % planet.resources)
+
         if planet.is_moon():
             return
         try:
-            buildingList = soup.find(id='building')
-            planet.buildings = []
+            planet.buildings = {}
             for c in soup.find('table', {'width': '530'}).findAll('td', {'class': 'l'}):
                 if len(c.attrs) == 1:
                     childs = c.findChildren()
                     if len(childs) > 2:
                         name = c.find('a').contents[0]
-                        if type(c.contents[2]) is Tag:
+                        exp = self.RE_BUILD_LVL.findall(str(c.contents[2]))
+                        if not exp or not exp[0]:
                             lvl = 0
                         else:
-                            lvl = int(self.RE_BUILD_LVL.findall(str(c.contents[2]))[0])
+                            lvl = int(exp[0])
                         suff_energy = planet.resources[
                             'energy'] - self.sim.upgrade_energy_cost(name, lvl+1) > 0
-                        planet.buildings.append(dict(name=name,level=lvl,sufficient_energy=suff_energy))
-            i=0
-            for c in soup.find('table', {'width': '530'}).findAll('td', {'class': 'k'}):
-                if type(c.next) is Tag:
-                    if c.next.has_key('href'):
-                        planet.buildings[i]['link'] = c.next['href']
-                    i+=1
-
-            planet.buildings={y['name']:y for y in planet.buildings}
+                        canbuild = c.find('b', {'style': "color:red;"}) is None
+                        c2 = c.findNext('td').find('a')
+                        if c2 and canbuild:
+                            link = c2['href']
+                        else:
+                            link = None
+                        planet.buildings[name] = {
+                            'link': link,
+                            'level': lvl,
+                            'sufficient_energy': suff_energy,
+                            'in_construction': False}
             for c in soup.find('table', {'width': '530'}).findAll('td', {'class': 'l'}):
                 if len(c.attrs) > 1:
-                    name,lvl = self.RE_IN_CONSTRUCTION.findall(str(c.contents[0]))[0]
+                    name, lvl = self.RE_IN_CONSTRUCTION.findall(
+                        str(c.contents[0]))[0]
                     planet.buildings[name].pop('link', None)
-                    planet.buildings[name]['level']=max(planet.buildings[name]['level'],int(lvl))
+                    planet.buildings[name]['level'] = max(
+                        planet.buildings[name]['level'],
+                        int(lvl))
+                    planet.buildings[name]['in_construction'] = True
         except:
-            self.logger.exception('Exception while updating buildings info')
+            self.logger.exception('Exception while reloading buildings info')
             return False
         else:
-            self.logger.info('%s buildings were updated' % planet)
-        name = planet.get_mine_to_upgrade_list()
-        if name:
-            self.logger.info('Building upgrade on %s: %s' % (planet, name))
-            self.br.open(planet.buildings[name]['link'])
-            # let now transport manager to clear building queue
-            # self.transport_manager.update_building(planet)
+            self.logger.info('%s buildings were reloaded' % planet)
+        return True
+
+    def update_planet_research(self, planet):
+        resp = self.br.open(self._get_url('research', planet))
+        soup = BeautifulSoup(resp)
+        if planet.is_moon():
+            return
+        try:
+            planet.researches = {}
+            for c in soup.find('table', {'width': '530'}).findAll('td', {'class': 'l'}):
+                if len(c.attrs) == 1:
+                    childs = c.findChildren()
+                    if len(childs) > 2:
+                        name = c.find('a').contents[0]
+                        exp = self.RE_BUILD_LVL.findall(str(c.contents[2]))
+                        if not exp or not exp[0]:
+                            lvl = 0
+                        else:
+                            lvl = int(exp[0])
+                        canbuild = c.find('b', {'style': "color:red;"}) is None
+                        c2 = c.findNext('th', {'class': 'l'}).find('a')
+                        if c2 and canbuild:
+                            link = c2['href']
+                        else:
+                            link = None
+                        planet.researches[name] = {
+                            'link': link,
+                            'level': lvl,
+                            'in_construction': False}
+        except:
+            self.logger.exception('Exception while reloading researches info')
+            return False
         else:
-            self.logger.info('Nothing to upgrade on %s' % planet)
+            self.logger.info('%s researches were reloaded' % planet)
         return True
 
     def transport_resources(self):
@@ -491,7 +576,7 @@ class Bot(object):
         self.logger.info(inactives)
 
     def send_fleet(self, origin_planet, destination, fleet={}, resources={},
-                   mission='attack', target='planet', speed=None):
+                   mission='Attack', target='Planet', speed=None):
         if origin_planet.coords == destination:
             self.logger.error('Cannot send fleet to the same planet')
             return False
@@ -500,64 +585,61 @@ class Bot(object):
         resp = self.br.open(self._get_url('fleet', origin_planet))
         try:
             try:
-                self.br.select_form(name='shipsChosen')
+                self.br.select_form(predicate=lambda f: f.attrs.has_key('action') and f.attrs['action']=='game.php?page=fleet1')
             except mechanize.FormNotFoundError:
                 self.logger.info('No available ships on the planet')
                 return False
-
+            #resp=open("samples/fleet.html", "r").read()
             soup = BeautifulSoup(resp)
-            for ship, num in fleet.iteritems():
-                s = soup.find(id='button' + self.SHIPS[ship])
-                num = int(num)
-                try:
-                    available = int(
-                        s.find(
-                            'span',
-                            'textlabel').nextSibling.replace(
-                            '.',
-                            ''))
-                except:
-                    available = 0
-                if available < num and mission in ('attack', 'expedition'):
-                    self.logger.info('No available ships to send')
-                    return False
-                if num > 0:
-                    self.br.form['am' + self.SHIPS[ship]] = str(num)
+            sended= set()
+            for c in  soup.find('form', {'action':'game.php?page=fleet1'}).findAll('tr')[2:-2]:
+                name = c.find('a').contents[0].strip()
+                if name in fleet:
+                    inp= c.find('input')['name'].strip()
+                    sended.add(name)
+                    self.br.form[inp]=fleet[name]
 
+            for name in fleet.iterkeys():
+                if name not in sended:
+                    self.logger.info("Couldn't send all ships to mission")
+                    return False
             self.br.submit()
 
             try:
-                self.br.select_form(name='details')
+                self.br.select_form(predicate=lambda f: f.attrs.has_key('action') and f.attrs['action']=='game.php?page=fleet2')
             except mechanize.FormNotFoundError:
-                self.logger.info('No available ships on the planet')
+                self.logger.info('Error while sending ships, fleet2')
                 return False
 
             galaxy, system, position = destination.split(':')
-            self.br['galaxy'] = galaxy
-            self.br['system'] = system
-            self.br['position'] = position
-            self.br.form.find_control("type").readonly = False
-            self.br['type'] = self.TARGETS[target]
-            self.br.form.find_control("speed").readonly = False
+            self.br.form['galaxy'] = galaxy
+            self.br.form['system'] = system
+            self.br.form['planet'] = position
+            self.br.form['planettype'] = self.TARGETS[target]
             if speed:
-                self.br['speed'] = self.SPEEDS[speed]
+                self.br.form['speed'] =str(floor(int(speed)/10))
             self.br.submit()
 
-            self.br.select_form(name='sendForm')
+            try:
+                self.br.select_form(predicate=lambda f: f.attrs.has_key('action') and f.attrs['action']=='game.php?page=fleet3')
+            except mechanize.FormNotFoundError:
+                self.logger.info('Error while sendind ships, fleet 3')
+                return False
+
             self.br.form.find_control("mission").readonly = False
             self.br.form['mission'] = self.MISSIONS[mission]
-            if 'metal' in resources:
-                self.br.form['metal'] = str(resources['metal'])
-            if 'crystal' in resources:
-                self.br.form['crystal'] = str(resources['crystal'])
-            if 'deuterium' in resources:
-                self.br.form['deuterium'] = str(resources['deuterium'])
+            if 'Metal' in resources:
+                self.br.form['resource1'] = str(resources['Metal'])
+            if 'Crystal' in resources:
+                self.br.form['resource2'] = str(resources['Crystal'])
+            if 'Deuterium' in resources:
+                self.br.form['resource3'] = str(resources['Deuterium'])
             self.br.submit()
         except Exception as e:
             self.logger.exception(e)
             return False
         else:
-            if mission == 'attack':
+            if mission == 'Attack':
                 self.farm_no += 1
         return True
 
@@ -745,6 +827,14 @@ class Bot(object):
         self.logger.info('Stopping bot')
         os.unlink(self.pidfile)
 
+    def interactive(self):
+        self.pid = str(os.getpid())
+        self.pidfile = 'bot.pid'
+        file(self.pidfile, 'w').write(self.pid)
+        if not self.login():
+            self.logger.error('Login failed!')
+        self.load_planets()
+
     def start(self):
         self.logger.info('Starting bot')
         self.pid = str(os.getpid())
@@ -755,6 +845,7 @@ class Bot(object):
         while True:
             if self.login():
                 try:
+                    self.load_planets()
                     self.handle_planets()
                     # self.find_inactives()
                     # if not self.active_attacks:
@@ -774,6 +865,13 @@ class Bot(object):
                 # self.stop()
                 # return
             self.sleep()
+
+
+def st():
+    credentials = options['credentials']
+    bot = Bot(credentials['username'], credentials['password'])
+    bot.interactive()
+    return bot
 
 if __name__ == "__main__":
     credentials = options['credentials']

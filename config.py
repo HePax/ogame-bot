@@ -38,6 +38,10 @@ class Options(watchdog.events.FileSystemEventHandler):
         print 'config reloaded'
         self._config.read(self.CONFIG_FILE)
         self.check_config()
+        
+    def change_item(self, section, key, value):
+        self._config.set(section, key, value)
+        self._config.write(open(self.CONFIG_FILE, "w"))
 
     def check_config(self):
         self._config_valid = False
@@ -50,7 +54,6 @@ class Options(watchdog.events.FileSystemEventHandler):
             self._config_valid = False
 
     def __getitem__(self, section):
-
         return dict(self._config.items(section))
 
     @property

@@ -12,7 +12,7 @@ class Sim(object):
 			'crystal': 24,
 			'deuterium': 0
 		},
-		'Deuterium Mine':{
+		'Deuterium Synthesizer':{
 			'metal':   225,
 			'crystal':  75,
 			'deuterium': 0
@@ -31,7 +31,7 @@ class Sim(object):
 	FACTORS = {
 		'Metal Mine': 1.5,
 		'Crystal Mine': 1.6,
-		'Deuterium Mine': 1.5,
+		'Deuterium Synthesizer': 1.5,
 		'Solar Plant': 1.5,
 		'Fusion Plant': 1.8
 	}
@@ -39,11 +39,11 @@ class Sim(object):
 	ENERGY_COST_FACTORS = {
 		'Metal Mine': 10,
 		'Crystal Mine': 10,
-		'Deuterium Mine': 20
+		'Deuterium Synthesizer': 20
 	}
 
 	def _calc_building_cost(self, what, level):
-		assert what in ('Metal Mine', 'Crystal Mine', 'Deuterium Mine', 'Solar Plant', 'Fusion Plant')
+		assert what in ('Metal Mine', 'Crystal Mine', 'Deuterium Synthesizer', 'Solar Plant', 'Fusion Plant')
 		return {
 			'metal': int(self.FIRST_COST[what]['metal'] * (self.FACTORS[what] ** (level - 1))),
 			'crystal': int(self.FIRST_COST[what]['crystal'] * (self.FACTORS[what] ** (level - 1))),
@@ -69,7 +69,7 @@ class Sim(object):
 		return self._calc_building_cost('Crystal Mine', level)
 
 	def cost_deuterium_mine(self, level):
-		return self._calc_building_cost('Deuterium Mine', level)
+		return self._calc_building_cost('Deuterium Synthesizer', level)
 
 	def get_cost(self, what, level):
 		return self._calc_building_cost(what, level)

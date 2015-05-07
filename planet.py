@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from config import options
+import math
 
 
 class Planet(object):
@@ -14,7 +15,7 @@ class Planet(object):
         self.mines = (
             'Metal Mine',
             'Crystal Mine',
-            'Deuterium Mine'
+            'Deuterium Synthesizer'
         )
         self.resources = {
             'metal': 0,
@@ -24,37 +25,37 @@ class Planet(object):
         }
         
         self.buildings = {
-            'metalMine': {
+            'Metal Mine': {
                 'level': 0,
                 'buildUrl':'',
                 'can_build': False,
                 'sufficient_energy': False
             },
-            'crystalMine': {
+            'Crystal Mine': {
                 'level': 0,
                 'buildUrl':'',
                 'can_build': False,
                 'sufficient_energy': False
             },
-            'deuteriumMine': {
+            'Deuterium Synthesizer': {
                 'level': 0,
                 'buildUrl':'',
                 'can_build': False,
                 'sufficient_energy': False
             },
-            'solarPlant': {
+            'Solar Plant': {
                 'level': 0,
                 'buildUrl':'',
                 'can_build': False,
                 'sufficient_energy': True
             },
-            'fusionPlant': {
+            'Fusion Plant': {
                 'level': 0,
                 'buildUrl':'',
                 'can_build': False,
                 'sufficient_energy': True
             },
-            'solarSatellite': {
+            'Solar Satellite': {
                 'level': 0,
                 'buildUrl':'',
                 'can_build': False,
@@ -84,21 +85,59 @@ class Planet(object):
     def __eq__(self, other):
         return self.id == other.id
         
-    def get_mine_to_upgrade_list(self):
+    def get_upgrades(self):
         build_options = options['building']
         for s in build_options['list'].split(','):
             name,lvl=[x.strip() for x in s.split(':')]
             if name in self.buildings:
                 if int(lvl)>self.buildings[name]['level']:
-                    if self.buildings[name].has_key('link'):
-                        return name, self.buildings[name]['link']
+                    if self.buildings[name]['link']:
+                        return {'buildings':[name]}
                     else:
-                        return None
-        return get_mine_to_upgrade_classic(self)
+                        return {}
+            elif name in self.researches:
+                if int(lvl)>self.researches[name]['level']:
+                    if self.researches[name]['link']:
+                        return  {'researches':[name]}
+                    else:
+                        return {}
+        fl=self.get_fleets_to_build()
+        if fl:
+            return {'fleets':fl}
+        return {}
+        #return self.get_mine_to_upgrade_classic()
     
+    def get_max_possible(self, cost):
+        mx=-1
+        for r,a in cost.iteritems(): 
+            if r not in self.resources:
+                return 0
+            l=int(math.floor(self.resources[r]/a))
+            if mx==-1:
+                mx=l
+            else:
+                mx=min(mx, l)
+        return max(mx,0)
+        
+    def get_fleets_to_build(self):
+        todo=[s.split(':') for s in options['fleet']['build'].split(',') if s.strip()]
+        todo={name.strip():int(cant.strip()) for name,cant in todo}
+        updated=False
+        res={}
+        for name,cant in todo.iteritems():
+            if name in self.buyable_fleets:
+                tobuild=min(cant, self.get_max_possible(self.buyable_fleets[name]))
+                if tobuild>0:
+                    res[name]=tobuild
+                    todo[name]-=tobuild
+                    updated=True
+        if updated:
+            options.change_item('fleet', 'build', ', '.join(["%s: %d"%(name,cant) for name,cant in todo.iteritems()]))
+        return res
+                
     def get_mine_to_upgrade_classic(self):
         build_options = options['building']
-        levels_diff = map(int, build_options['levels_diff'].split(','))
+        levels_diff = map(float, build_options['levels_diff'].split(','))
         max_fusion_lvl = int(build_options['max_fusion_plant_level'])
 
         b = self.buildings
@@ -109,11 +148,11 @@ class Planet(object):
         for i, mine in enumerate(self.mines):
             mine_levels[i] = b[mine]['level']
 
-        proposed_levels = [
+        proposed_levels =map(math.floor, [
             b['Metal Mine']['level'],
             b['Metal Mine']['level'] - levels_diff[0],
-            b['Metal Mine']['level'] - levels_diff[0] - levels_diff[1]
-        ]
+            (b['Metal Mine']['level'] - levels_diff[0]) *levels_diff[1]
+        ])
         proposed_levels = [0 if l < 0 else l for l in proposed_levels]
         if proposed_levels == mine_levels or (mine_levels[1] >= proposed_levels[1] and mine_levels[2] >= proposed_levels[2]):
             proposed_levels[0] += 1
@@ -123,16 +162,16 @@ class Planet(object):
             building = self.mines[i]
             if b[building]['sufficient_energy']:
                 num_suff_energy += 1
-            if b[building].has_key('link') and proposed_levels[i] > b[building]['level']:
+            if b[building]['link'] and proposed_levels[i] > b[building]['level']:
                 if b[building]['sufficient_energy']:
                     return building
                 else:
                     build_power_plant = True
 
         if build_power_plant or num_suff_energy == 0:
-            if b['Solar Plant'].has_key('link'):
-                return u'Solar plant'
-            elif b.has_key('Fusion Plant') and b['Fusion Plant'].has_key('link') and \
+            if b['Solar Plant']['link']:
+                return u'Solar Plant'
+            elif b.has_key('Fusion Plant') and b['Fusion Plant']['link'] and \
                     b['Fusion Plant']['level'] < max_fusion_lvl:
                 return u'Fusion Plant'
             else:

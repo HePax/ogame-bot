@@ -60,3 +60,4 @@ target/
 
 config.ini
 bot.pid
+bot.log.*
